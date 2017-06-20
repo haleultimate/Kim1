@@ -18,11 +18,13 @@ calc_wrapper <- function(stx_list){
   return (PCA_matrix)
 }
 
+#Finds top 50 correlated stocks and runs stepwise regression for each stock in PCA_matrix
 Correlated_stocks <- function(PCA_matrix){
   PCA_correlation = cor(PCA_matrix)
   num_stocks = 50
   stocks = colnames(PCA_correlation)
   results = list()
+  Rsquared = list()
   
   for (j in 1:491){
   
@@ -40,7 +42,9 @@ Correlated_stocks <- function(PCA_matrix){
     step <- stepAIC(fit, direction="both")
     result = step$coefficients
     results[[j]] = result
-    names(results)[j] <- stocks[j] 
+    names(results)[j] <- stocks[j]
+    Rsquared[[j]] = summary(step)$adj.r.squared
+    names(Rsquared)[j] <- stocks[j]
   }
   return(results) 
 }
