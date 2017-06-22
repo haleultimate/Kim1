@@ -1,6 +1,6 @@
 #init.R
 load_stock_history_PCA <- function(stx_list.old) {
-  if (exists("data.env")) return(com.env$stx_list)
+  if (exists("data.env") & !is.null(stx_list.old)) return(stx_list.old)
   Sys.setenv(TZ = "UTC")
   adjustment <- TRUE
   start_date <- "2006-01-01" 
