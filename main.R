@@ -14,6 +14,5 @@ stx_list.loaded <- load_stock_history_PCA(stx_list.loaded)
 #code below should be set up as functions where possible
 Returns(stx_list.loaded)
 Correlated_stocks()
-Pos_Coff_Correlation()
-PCA_Analysis ()
+PCA_Analysis()
 

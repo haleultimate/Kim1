@@ -21,18 +21,19 @@ calc_wrapper <- function(stx_list){
 #Finds top 50 correlated stocks and runs stepwise regression for each stock in var.env$Stock_Return
 Correlated_stocks <- function(){
   PCA_correlation <- cor(var.env$Stock_Return)
-  num_stocks <- 50
   stocks <- colnames(PCA_correlation)
   var.env$unc_res <- list()
   var.env$unc_R2 <- list()
+  var.env$pos_res <- list()
+  var.env$pos_R2 <- list()
   
   #Loops through each stock in Stock_Return
-  for (j in 1:491){
-  
+  for (j in 1:length(var.env$Stock_Return[1])){
+    
+    #gets top 50 correlated stocks
+    num_stocks <- 50
     stock <- sort(PCA_correlation[,j], decreasing=TRUE)[1:num_stocks]
     corr_stock <- names(stock)
-    
-    #gets names of top 50 correlated stocks
     string <- ""
     for (i in 2:49){
       string <- paste0(string,corr_stock[i],"+")
@@ -44,53 +45,53 @@ Correlated_stocks <- function(){
     eval(parse(text=command_string))
     step <- stepAIC(fit, direction="both",trace=FALSE)
     
-    #Stores results in unc_res and unc_R2
+    #Stores results in unc_res and and adjusted R^2 in unc_R2
     result <- step$coefficients
     var.env$unc_res[[j]] <- result
     names(var.env$unc_res)[j] <- stocks[j]
     var.env$unc_R2[[j]] <- summary(step)$adj.r.squared
     names(var.env$unc_R2)[j] <- stocks[j]
+    
+    num_stocks <- length(var.env$unc_res[[j]])
+    
+    lower_bound <- as.list(rep(0, num_stocks))
+    
+    #sets initial variable values equal to values found in the unconstrained model
+    #converts any negative values to zero
+    initial_value <- var.env$unc_res[[j]]
+    initial_value[initial_value<0] <- 0
+    for (i in 1:num_stocks){
+      names(initial_value)[i] <- unlist(strsplit(names(step$coefficients)[i],"[.]"))[1]
+    }
+    
+    #Creates string for nls()
+    corr_stock <- names(var.env$unc_res[[j]])
+    string <- ""
+    for (i in 1:num_stocks){
+      string <- paste0(string,"+",unlist(strsplit(names(step$coefficients)[i],"[.]"))[1],"*",corr_stock[i])
+    }
+    
+    var.env$Stock_Return.df <- as.data.frame(var.env$Stock_Return)
+    
+    command_string <- paste0("fit <- nls(",stocks[j],"~0",string,",data=var.env$Stock_Return.df,alg=\"port\",start=initial_value,lower=lower_bound)")
+    eval(parse(text=command_string))
+    
+    #Removes any zero valued coefficients
+    result <- summary(fit)$coefficients[,1]
+    result[result==0] <- NA
+    result
+    result <- na.omit(result)
+    
+    #Stores results in pos_res and adjusted R^2 in pos_R2
+    var.env$pos_res[[j]] <- result
+    names(var.env$pos_res)[j] <- stocks[j]
+    actual <- var.env$Stock_Return[,j]
+    predict <- predict(fit)
+    R2 <- 1- (sum((actual-predict )^2)/sum((actual-mean(actual))^2))
+    var.env$pos_R2[[j]] <- 1- ((1-R2)*(length(var.env$Stock_Return[,j])-1)/(length(var.env$Stock_Return[,j]) - length(var.env$pos_res[[j]]) -1))
+    names(var.env$pos_R2)[j] <- stocks[j]
   }
 }
-
-Pos_Coff_Correlation <- function(){
-  PCA_correlation <- cor(var.env$Stock_Return)
-  j <- 1
-  num_stocks <- length(var.env$unc_res[[j]])
-  
-  lower_bound <- as.list(rep(0, num_stocks))
-  
-  #sets initial variable values equal to values found in the unconstrained model and converts any negative values to zero
-  initial_value <- var.env$unc_res[[j]]
-  initial_value[initial_value<0] <- 0
-  for (i in 1:num_stocks){
-    names(initial_value[i]) <- unlist(strsplit(names(step$coefficients)[i],"[.]"))[1]
-  }
-  
-  corr_stock <- names(var.env$unc_res[[j]])
-  string <- ""
-  for (i in 1:num_stocks){
-    string <- paste0(string,"+",corr_stock[i])
-  }
-  string <- paste0(string,corr_stock[num_stocks])
-  
-  stock_return = var.env$Stock_Return[,j]
-  var.env$Stock_Return.df <- as.data.frame(var.env$Stock_Return)
-  
-  string <- "A.Adjusted ~ beta1*FOX.Adjusted + beta2*FOXA.Adjusted + beta3*CSCO.Adjusted + beta4*PX.Adjusted + beta5*FMC.Adjusted + beta6*ROK.Adjusted + beta7*MOLX.Adjusted + beta8* CMI.Adjusted + beta9*ETN.Adjusted + beta10*BEN.Adjusted + beta19*RRD.Adjusted + beta11*WMB.Adjusted + beta12*PH.Adjusted + beta13*INTC.Adjusted + beta14*MMM.Adjusted + beta15*TMO.Adjusted + beta16*BMS.Adjusted + beta17*JEC.Adjusted + beta18*TER.Adjusted"
-  
-  command_string <- paste0("fit <- nls(",stocks[j],"~0",string,",data=var.env$Stock_Return.df,alg=\"port\",start=initial_value,lower=lower_bound)")
-  eval(parse(text=command_string))
-
-  g <- function(x)
-    function(beta1,beta2,beta3)
-      beta1+ beta2*x+beta3*x^2
-  
-  out <- nls(y~g(x)(beta1,beta2,beta3),data=data.frame(x,y),
-             alg="port",
-             start=list(beta1=1,beta2=1,beta3=1),
-             lower=list(beta1=1,beta2=1,beta3=1))
-  }
 
 PCA_Analysis <- function(){
   #June 2006 - May 2007 PCA analysis
