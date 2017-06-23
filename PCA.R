@@ -26,9 +26,10 @@ Correlated_stocks <- function(){
   var.env$unc_R2 <- list()
   var.env$pos_res <- list()
   var.env$pos_R2 <- list()
+  var.env$one_res <- list()
   
   #Loops through each stock in Stock_Return
-  for (j in 1:length(var.env$Stock_Return[1])){
+  for (j in 1:5){
     
     #gets top 50 correlated stocks
     num_stocks <- 50
@@ -90,6 +91,14 @@ Correlated_stocks <- function(){
     R2 <- 1- (sum((actual-predict )^2)/sum((actual-mean(actual))^2))
     var.env$pos_R2[[j]] <- 1- ((1-R2)*(length(var.env$Stock_Return[,j])-1)/(length(var.env$Stock_Return[,j]) - length(var.env$pos_res[[j]]) -1))
     names(var.env$pos_R2)[j] <- stocks[j]
+    
+    #Recalculates coefficient values so they sum to one and stores in one_res
+    sum <- 0
+    for (i in 1:length(var.env$pos_res[[j]])){
+      sum <- sum + var.env$pos_res[[j]][i]
+    }
+    var.env$one_res[[j]] <- var.env$pos_res[[j]]/sum
+    names(var.env$one_res)[j] <- stocks[j]
   }
 }
 
