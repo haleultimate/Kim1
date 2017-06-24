@@ -29,7 +29,7 @@ Correlated_stocks <- function(){
   var.env$one_res <- list()
   
   #Loops through each stock in Stock_Return
-  for (j in 1:5){
+  for (j in 1:length(var.env$Stock_Return[1])){
     
     #gets top 50 correlated stocks
     num_stocks <- 50
@@ -74,7 +74,7 @@ Correlated_stocks <- function(){
     
     var.env$Stock_Return.df <- as.data.frame(var.env$Stock_Return)
     
-    command_string <- paste0("fit <- nls(",stocks[j],"~0",string,",data=var.env$Stock_Return.df,alg=\"port\",start=initial_value,lower=lower_bound)")
+    command_string <- paste0("fit <- nls(",stocks[j],"~0",string,",data=var.env$Stock_Return.df,alg=\"port\",control = nls.control(warnOnly=TRUE),start=initial_value,lower=lower_bound)")
     eval(parse(text=command_string))
     
     #Removes any zero valued coefficients
