@@ -35,6 +35,7 @@ load_packages <- function() {
   library(forecast)
   library(leaps)
   library(fmsb)
+  library(MASS)
 }
 
 stock_list_PCA <- function() {
@@ -699,7 +700,7 @@ stock_list_PCA <- function() {
     "XRX",
     #"XTO",
     #"XYL",
-    "YHOO",
+    #"YHOO",
     "YUM",
     "ZBH",
     "ZION"

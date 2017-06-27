@@ -2,7 +2,7 @@ calc_adjret_PCA <- function(ve.xts,field,first_pass=FALSE) {
   #print(paste("ve.xts",ve.xts,"coln",coln,"field",field))
   ticker <- sub("var.env$","",ve.xts,fixed=TRUE)
   de.xts <- paste("data.env$",ticker,"$",ticker,field,sep="")
-  cmd_string <- paste(ve.xts," <- (stats::lag(",de.xts,",-1)-",de.xts,")/",de.xts,sep="")
+  cmd_string <- paste(ve.xts," <- log(stats::lag(",de.xts,",-1)/",de.xts,")",sep="")
   #print(cmd_string)
   eval(parse(text=cmd_string))
 }
@@ -12,6 +12,16 @@ calc_wrapper <- function(stx_list){
   for (ticker in stx_list){
     ve.xts <- paste0("var.env$",ticker)
     calc_adjret_PCA(ve.xts, ".Adjusted")
+    lcp <- 0.05
+    hcp <- 0.95
+    cmd_string <- paste("lcap <- quantile(",ve.xts,",lcp,na.rm=TRUE)",sep="")
+    eval(parse(text=cmd_string))
+    cmd_string <- paste("hcap <- quantile(",ve.xts,",hcp,na.rm=TRUE)",sep="")
+    eval(parse(text=cmd_string))
+    cmd_string <- paste(ve.xts,"[",ve.xts," < ",lcap,"] <- ",lcap,sep="")
+    eval(parse(text=cmd_string))
+    cmd_string <- paste(ve.xts,"[",ve.xts," > ",hcap,"] <- ",hcap,sep="")
+    eval(parse(text=cmd_string))
     command_string <- paste0("var.env$Stock_Return <- cbind(var.env$Stock_Return,",ve.xts,")")
     eval(parse(text=command_string))
   }
