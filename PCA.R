@@ -25,6 +25,7 @@ calc_wrapper <- function(stx_list){
     command_string <- paste0("var.env$Stock_Return <- cbind(var.env$Stock_Return,",ve.xts,")")
     eval(parse(text=command_string))
   }
+  colnames(var.env$Stock_Return) <- sub(".Adjusted","",colnames(var.env$Stock_Return))
   return (var.env$Stock_Return)
 }
 
@@ -117,18 +118,20 @@ PCA_Analysis <- function(){
   pr.out<-prcomp(var.env$Stock_Return[104:354], center=TRUE, scale=TRUE)
   
   #Matrix of PCA components
-  var.env$eig.array <- pr.out$rotation
+  var.env$PCA.array <- pr.out$rotation
   
-  #Top 10 and Bottom 10 stocks for 2-6 PCA components
-  var.env$top10 <- list()
-  var.env$bottom10 <- list()
-  for (i in 2:6){
-    sorted <- sort(var.env$eig.array[,1], decreasing=TRUE)
-    var.env$top10[[i-1]] <- names(sorted[1:10])
-    var.env$bottom10[[i-1]] <- names(tail(sorted, 10))
+  #Top 20 and Bottom 20 stocks for 2-6 PCA components
+  #var.env$top10 <- list()
+  #var.env$bottom10 <- list()
+  for (i in 2:11){
+    sorted <- sort(var.env$PCA.array[,i], decreasing=TRUE)
+    var.env$top20[[i-1]] <- names(sorted[1:20])
+    var.env$bottom20[[i-1]] <- names(tail(sorted, 20))
   }
-  names(var.env$top10) <- names(var.env$eig.array[1,][2:6])
-  names(var.env$bottom10) <- names(var.env$eig.array[1,][2:6])
+  names(var.env$top20) <- names(var.env$PCA.array[1,][2:11])
+  names(var.env$bottom20) <- names(var.env$PCA.array[1,][2:11])
+  save("PCA.array",file="PCA.dat",envir = var.env)
+  load("PCA.dat",envir = rnd.env)
 
   #Plot of explained variance
   pr.var<-pr.out$sdev^2

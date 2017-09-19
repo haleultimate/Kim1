@@ -11,8 +11,12 @@ load_packages()
 stock_list_PCA()   
 stx_list.loaded <- load_stock_history_PCA(stx_list.loaded)  
 
+print("stocks loaded")
+print(stx_list.loaded)
 #code below should be set up as functions where possible
+print("calculating returns")
 Returns(stx_list.loaded)
-Correlated_stocks()
+#Correlated_stocks()
+print("calculating PCA")
 PCA_Analysis()
 
